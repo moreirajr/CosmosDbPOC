@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+
+##############################
+#######  Api
+##############################   
+  cosmos-poc-api:
+    container_name: cosmos-poc-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - CosmosDb__ConnectionString=https://azure-cosmos-db:8081/
+      - CosmosDb__AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.debug
+    ports:
+      - 5000:5000
+    depends_on:
+      azure-cosmos-db:
+        condition: service_started #service_healthy
+   
+##############################
+#######  COSMOS DB - NOT WORKING
+##############################
+  azure-cosmos-db:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    pull_policy: if_not_present
+    container_name: azure-cosmos-db
+    tty: true
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=3
+      - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
+    #healthcheck:
+    #  test: ["CMD", "curl", "-f", "https://azure_cosmos-db:8081/_explorer/index.html"]
+    #  interval: 40s
+    #  retries: 5
+    volumes:
+       - vol_cosmos:/data/cosmos/emulator
+
+volumes:
+  vol_cosmos:  
